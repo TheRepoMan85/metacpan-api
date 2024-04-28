@@ -14,10 +14,16 @@ sub config {
     require_module('Git::Helpers');
     $config = _zomg( Git::Helpers::checkout_root() );
 
-    return $config if $config;
+    if ( !$config ) {
+        die "Couldn't find config file in $FindBin::RealBin/.. or "
+            . Git::Helpers::checkout_root();
+    }
 
-    die "Couldn't find config file in $FindBin::RealBin/.. or "
-        . Git::Helpers::checkout_root();
+    if ( defined $config->{logger} && ref $config->{logger} ne 'ARRAY' ) {
+        $config->{logger} = [ $config->{logger} ];
+    }
+
+    return $config;
 }
 
 sub _zomg {
