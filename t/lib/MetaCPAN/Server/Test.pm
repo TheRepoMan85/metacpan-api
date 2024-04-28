@@ -43,8 +43,7 @@ require MetaCPAN::Model;
 sub model {
     MetaCPAN::Model->new(
         es => (
-            $ENV{ES_TEST}
-                ||= MetaCPAN::Config::config()->{elasticsearch_servers}
+            nodes => [ MetaCPAN::Config::config()->{elasticsearch_servers} ]
         )
     );
 }

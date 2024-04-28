@@ -2,26 +2,25 @@ package MetaCPAN::TestServer;
 
 use MetaCPAN::Moose;
 
-use MetaCPAN::Config                 ();
-use MetaCPAN::DarkPAN                ();
-use MetaCPAN::Script::Author         ();
-use MetaCPAN::Script::Cover          ();
-use MetaCPAN::Script::CPANTestersAPI ();
-use MetaCPAN::Script::Favorite       ();
-use MetaCPAN::Script::First          ();
-use MetaCPAN::Script::Latest         ();
-use MetaCPAN::Script::Mapping        ();
-use MetaCPAN::Script::Mapping::Cover ();
-use MetaCPAN::Script::Mirrors        ();
-use MetaCPAN::Script::Package        ();
-use MetaCPAN::Script::Permission     ();
-use MetaCPAN::Script::Release        ();
-use MetaCPAN::Server                 ();
-use MetaCPAN::TestHelpers            qw( fakecpan_dir );
-use MetaCPAN::Types::TypeTiny        qw( Path HashRef Str );
-use Search::Elasticsearch;
-use Search::Elasticsearch::TestServer;
-use Test::More;
+use MetaCPAN::Config                  ();
+use MetaCPAN::Script::Author          ();
+use MetaCPAN::Script::Cover           ();
+use MetaCPAN::Script::CPANTestersAPI  ();
+use MetaCPAN::Script::Favorite        ();
+use MetaCPAN::Script::First           ();
+use MetaCPAN::Script::Latest          ();
+use MetaCPAN::Script::Mapping         ();
+use MetaCPAN::Script::Mapping::Cover  ();
+use MetaCPAN::Script::Mirrors         ();
+use MetaCPAN::Script::Package         ();
+use MetaCPAN::Script::Permission      ();
+use MetaCPAN::Script::Release         ();
+use MetaCPAN::Server                  ();
+use MetaCPAN::TestHelpers             qw( fakecpan_dir );
+use MetaCPAN::Types::TypeTiny         qw( HashRef Path Str );
+use Search::Elasticsearch             ();
+use Search::Elasticsearch::TestServer ();
+use Test::More import => [qw( BAIL_OUT diag is note ok subtest )];
 use Try::Tiny qw( catch try );
 
 has es_client => (
@@ -83,14 +82,12 @@ sub _build_config {
 sub _build_es_home {
     my $self = shift;
 
-    my $es_home = $ENV{ES_TEST}
-        || MetaCPAN::Config::config()->{elasticsearch_servers};
+    my $es_home = MetaCPAN::Config::config()->{elasticsearch_servers};
 
     if ( !$es_home ) {
-        my $es_home = $ENV{ES_HOME} or die <<'USAGE';
-Please set ${ES_TEST} to a running instance of Elasticsearch, eg
-'localhost:9200' or set $ENV{ES_HOME} to the directory containing
-Elasticsearch
+        die <<'USAGE';
+Please set elasticsearch_servers to a running instance of Elasticsearch, eg
+'localhost:9200'
 USAGE
     }
 
@@ -119,7 +116,7 @@ sub _build_es_server {
     diag 'Connecting to Elasticsearch on ' . $self->_es_home;
 
     try {
-        $ENV{ES_TEST} = $server->start->[0];
+        $server->start->[0];
     }
     catch {
         diag(<<"EOF");
